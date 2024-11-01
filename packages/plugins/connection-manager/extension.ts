@@ -24,6 +24,7 @@ import DependencyManager from './dependency-manager/extension';
 import { getExtension, resolveConnection } from './extension-util';
 import statusBar from './status-bar';
 import { removeAttachedConnection, attachConnection, getAttachedConnection } from './attached-files';
+import { performance } from 'perf_hooks';
 
 const log = createLogger('conn-man');
 
@@ -282,7 +283,10 @@ export class ConnectionManagerPlugin implements IExtensionPlugin {
       query = await this.replaceParams(query, conn);
       
       const view = await this._openResultsWebview(conn && conn.id, opt.requestId);
+      const startTime = performance.now();
       const payload = await this._runConnectionCommandWithArgs('query', query, { ...opt, requestId: view.requestId });
+      const executionTime = performance.now() - startTime;
+      payload.messages.push(`execution time: ${executionTime} ms`);
       this.updateViewResults(view, payload);
       return payload;
     } catch (e) {
